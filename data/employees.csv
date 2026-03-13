@@ -1,0 +1,31 @@
+employee_id,name,department_id,salary,hire_date,city
+1,Alice Chen,101,92000,2019-03-15,San Francisco
+2,Bob Martinez,102,78000,2020-07-01,New York
+3,Carol Johnson,101,105000,2017-11-20,San Francisco
+4,David Kim,103,67000,2021-01-10,Chicago
+5,Eve Rodriguez,104,72000,2020-09-05,New York
+6,Frank Wilson,105,95000,2018-04-22,San Francisco
+7,Grace Lee,101,110000,2016-08-30,San Francisco
+8,Henry Brown,106,62000,2022-03-14,Chicago
+9,Irene Davis,102,83000,2019-06-18,New York
+10,Jack Thompson,103,71000,2020-11-25,Chicago
+11,Karen White,101,98000,2018-01-09,San Francisco
+12,Leo Garcia,105,88000,2019-10-03,San Francisco
+13,Mia Jackson,104,69000,2021-05-17,New York
+14,Noah Harris,106,64000,2022-08-21,Chicago
+15,Olivia Clark,103,76000,2019-12-30,Chicago
+16,Peter Lewis,101,115000,2015-06-14,San Francisco
+17,Quinn Walker,102,81000,2020-02-28,New York
+18,Rachel Hall,105,91000,2018-07-11,San Francisco
+19,Sam Allen,103,73000,2021-04-05,Chicago
+20,Tina Young,104,68000,2022-01-19,New York
+21,Uma King,106,61000,2023-03-08,Chicago
+22,Victor Wright,101,102000,2017-09-25,San Francisco
+23,Wendy Scott,102,85000,2019-08-12,New York
+24,Xavier Adams,103,74000,2020-06-20,Chicago
+25,Yuki Tanaka,105,93000,2018-11-07,San Francisco
+26,Zara Mitchell,101,99000,2019-02-14,San Francisco
+27,Aaron Brooks,104,71000,2021-07-23,New York
+28,Bella Rivera,106,63000,2023-01-30,Chicago
+29,Carlos Diaz,102,79000,2020-10-16,New York
+30,Diana Flores,103,70000,2022-05-09,Chicago

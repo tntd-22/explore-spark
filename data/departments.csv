@@ -1,0 +1,7 @@
+department_id,department_name,budget,location
+101,Engineering,2500000,San Francisco
+102,Marketing,1200000,New York
+103,Sales,1800000,Chicago
+104,Human Resources,800000,New York
+105,Finance,1500000,San Francisco
+106,Operations,950000,Chicago

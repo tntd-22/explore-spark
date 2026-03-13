@@ -1,0 +1,16 @@
+services:
+  spark:
+    image: quay.io/jupyter/all-spark-notebook:latest
+    container_name: spark-learn
+    ports:
+      - "8888:8888"
+      - "4040:4040"
+    volumes:
+      - ./data:/home/jovyan/data
+      - ./notebooks:/home/jovyan/notebooks
+      - ./scripts:/home/jovyan/scripts
+      - ./output:/home/jovyan/output
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=spark
+    working_dir: /home/jovyan
