@@ -29,6 +29,7 @@ Everything runs in a single Docker container (`quay.io/jupyter/all-spark-noteboo
 | 6 | `06_reading_writing_data` | CSV, JSON, Parquet I/O, partitioning |
 | 7 | `07_udfs_complex_types` | UDFs, arrays, maps, structs |
 | 8 | `08_spark_scala_intro.md` | Scala guide for spark-shell |
+| 9 | `09_spark_mllib` | MLlib: features, regression, classification, pipelines, tuning |
 
 Start with notebook `01` and work through in order. Each builds on the previous.
 
