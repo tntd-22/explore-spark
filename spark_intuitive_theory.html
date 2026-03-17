@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apache Spark: A Comprehensive Theoretical Overview</title>
+<style>
+  /* ════════════════════ ACADEMIC THEME ════════════════════ */
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Code+Pro:wght@400;500&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #faf8f4;
+    --surface: #ffffff;
+    --surface2: #f3f0ea;
+    --accent: #8b1a1a;
+    --accent2: #1a4f8b;
+    --accent3: #5b3a8b;
+    --accent4: #1a6b4a;
+    --text: #2c2c2c;
+    --text-dim: #5e5e5e;
+    --text-light: #888;
+    --border: #d4cfc5;
+    --border-light: #e8e4db;
+    --red: #b91c1c;
+    --yellow: #92700a;
+    --serif: 'Crimson Pro', 'Georgia', 'Times New Roman', serif;
+    --sans: 'Source Sans 3', 'Helvetica Neue', sans-serif;
+    --mono: 'Source Code Pro', 'Consolas', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--serif);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.85;
+    font-size: 18px;
+  }
+
+  /* ── NAVIGATION ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(250,248,244,.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; gap: 1.8rem;
+    height: 50px; overflow-x: auto;
+    font-family: var(--sans);
+  }
+  nav .title-mark {
+    color: var(--accent);
+    font-weight: 700; font-size: .9rem;
+    white-space: nowrap; letter-spacing: .02em;
+  }
+  nav a {
+    color: var(--text-dim); text-decoration: none;
+    font-size: .78rem; font-weight: 500;
+    white-space: nowrap; transition: color .2s;
+    padding: 4px 0;
+    border-bottom: 2px solid transparent;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  nav a:hover, nav a.active { color: var(--accent); border-color: var(--accent); }
+
+  /* ── TITLE PAGE ── */
+  .title-page {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 6rem 2rem 4rem;
+    border-bottom: 3px double var(--border);
+  }
+  .title-page .rule { width: 120px; height: 2px; background: var(--accent); margin: 1.5rem auto; }
+  .title-page h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 700; letter-spacing: -.01em;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+  .title-page .subtitle-text {
+    font-family: var(--serif);
+    font-size: 1.25rem; font-style: italic;
+    color: var(--text-dim); max-width: 600px;
+    margin-top: .75rem;
+  }
+  .title-page .meta {
+    font-family: var(--sans);
+    font-size: .85rem; color: var(--text-light);
+    margin-top: 2rem; letter-spacing: .03em;
+  }
+  .title-page .toc-title {
+    font-family: var(--sans);
+    font-size: .85rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--text-dim); margin-top: 3rem; margin-bottom: .75rem;
+  }
+  .title-page .toc {
+    list-style: none; text-align: left;
+    max-width: 480px; width: 100%;
+  }
+  .title-page .toc li {
+    border-bottom: 1px dotted var(--border);
+    padding: .4rem 0;
+  }
+  .title-page .toc li a {
+    color: var(--text); text-decoration: none;
+    font-size: 1rem; display: flex; justify-content: space-between;
+  }
+  .title-page .toc li a:hover { color: var(--accent); }
+  .title-page .toc .ch { font-family: var(--sans); font-size: .8rem; color: var(--text-light); }
+
+  /* ── SECTIONS ── */
+  .chapter {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 4rem 2rem 3rem;
+  }
+  .chapter-header {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: .75rem;
+    margin-bottom: 2rem;
+  }
+  .chapter-header .ch-num {
+    font-family: var(--sans);
+    font-size: .8rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .12em;
+    color: var(--accent);
+  }
+  .chapter-header h2 {
+    font-family: var(--serif);
+    font-size: 1.9rem; font-weight: 700;
+    color: var(--text); line-height: 1.3;
+    margin-top: .25rem;
+  }
+  .chapter-header .abstract {
+    font-style: italic; color: var(--text-dim);
+    font-size: 1rem; margin-top: .5rem;
+    line-height: 1.6;
+  }
+
+  h3 {
+    font-family: var(--serif);
+    font-size: 1.35rem; font-weight: 600;
+    margin: 2.5rem 0 .75rem;
+    color: var(--accent2);
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: .3rem;
+  }
+  h4 {
+    font-family: var(--serif);
+    font-size: 1.1rem; font-weight: 600;
+    margin: 1.8rem 0 .6rem;
+    color: var(--accent3);
+  }
+  p { margin-bottom: 1rem; text-align: justify; }
+  strong { font-weight: 600; }
+
+  /* ── FIGURES (diagrams) ── */
+  figure {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: center;
+  }
+  figure svg { max-width: 100%; height: auto; }
+  figcaption {
+    font-family: var(--sans);
+    font-size: .82rem; color: var(--text-dim);
+    margin-top: .75rem; text-align: center;
+    font-style: italic;
+  }
+  figcaption .fig-num { font-weight: 600; font-style: normal; color: var(--text); }
+
+  /* ── DEFINITION BOX ── */
+  .definition {
+    background: var(--surface);
+    border-left: 4px solid var(--accent2);
+    padding: 1.2rem 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .definition .def-title {
+    font-family: var(--sans);
+    font-size: .78rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--accent2); margin-bottom: .3rem;
+  }
+
+  /* ── THEOREM / KEY INSIGHT ── */
+  .insight {
+    background: linear-gradient(to right, rgba(139,26,26,.04), transparent);
+    border: 1px solid rgba(139,26,26,.15);
+    border-left: 4px solid var(--accent);
+    padding: 1.2rem 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .insight .insight-title {
+    font-family: var(--sans);
+    font-size: .78rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--accent); margin-bottom: .3rem;
+  }
+
+  /* ── ANALOGY BOX ── */
+  .analogy {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.2rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .analogy .tag {
+    font-family: var(--sans);
+    font-size: .75rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--accent4); margin-bottom: .4rem;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .cmp-table {
+    width: 100%; border-collapse: collapse;
+    margin: 1.5rem 0; font-size: .92rem;
+    font-family: var(--sans);
+  }
+  .cmp-table th {
+    text-align: left; padding: .65rem .8rem;
+    background: var(--surface2);
+    border-bottom: 2px solid var(--border);
+    font-weight: 600; color: var(--text);
+    font-size: .82rem; text-transform: uppercase; letter-spacing: .05em;
+  }
+  .cmp-table td { padding: .65rem .8rem; border-bottom: 1px solid var(--border-light); }
+  .cmp-table tr:hover td { background: rgba(26,79,139,.03); }
+
+  /* ── CODE ── */
+  code {
+    font-family: var(--mono);
+    background: var(--surface2);
+    padding: 1px 6px; border-radius: 3px;
+    font-size: .85em; color: var(--accent2);
+  }
+  pre {
+    background: #1e1e2e; color: #cdd6f4;
+    font-family: var(--mono); font-size: .85rem;
+    padding: 1.25rem 1.5rem; border-radius: 4px;
+    overflow-x: auto; margin: 1.25rem 0; line-height: 1.6;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── GRID ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  @media (max-width: 700px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+  }
+  .card.a { border-top: 3px solid var(--accent); }
+  .card.b { border-top: 3px solid var(--accent2); }
+  .card.c { border-top: 3px solid var(--accent3); }
+  .card.d { border-top: 3px solid var(--accent4); }
+  .card .label {
+    font-family: var(--sans);
+    font-size: .75rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    margin-bottom: .4rem;
+  }
+  .card.a .label { color: var(--accent); }
+  .card.b .label { color: var(--accent2); }
+  .card.c .label { color: var(--accent3); }
+  .card.d .label { color: var(--accent4); }
+
+  /* ── TIMELINE ── */
+  .timeline { position: relative; padding-left: 2.5rem; margin: 2rem 0; }
+  .timeline::before {
+    content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+    width: 2px; background: var(--border);
+  }
+  .tl-event { position: relative; margin-bottom: 2rem; }
+  .tl-event::before {
+    content: ''; position: absolute; left: -2.5rem; top: 6px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--surface); border: 3px solid var(--accent);
+  }
+  .tl-event:nth-child(3n+2)::before { border-color: var(--accent2); }
+  .tl-event:nth-child(3n)::before { border-color: var(--accent3); }
+  .tl-year {
+    font-family: var(--sans); font-weight: 700;
+    font-size: .82rem; color: var(--accent);
+  }
+  .tl-event:nth-child(3n+2) .tl-year { color: var(--accent2); }
+  .tl-event:nth-child(3n) .tl-year { color: var(--accent3); }
+  .tl-event h4 { margin: .15rem 0 .3rem; color: var(--text); font-size: 1.02rem; border: none; padding: 0; }
+  .tl-event p { color: var(--text-dim); font-size: .92rem; margin: 0; }
+
+  /* ── DETAILS / EXPANDABLE ── */
+  details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin: 1.25rem 0;
+    overflow: hidden;
+  }
+  details summary {
+    padding: 1rem 1.25rem;
+    cursor: pointer; font-weight: 600;
+    list-style: none;
+    display: flex; align-items: center; gap: .5rem;
+    font-family: var(--sans); font-size: .95rem;
+  }
+  details summary::before {
+    content: '\25B8'; color: var(--accent); transition: transform .2s;
+    display: inline-block;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details .inner { padding: 0 1.25rem 1.25rem; }
+  details .inner p:last-child { margin-bottom: 0; }
+
+  /* ── SEPARATOR ── */
+  .sep { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+  /* ── FLOW ── */
+  .flow {
+    display: flex; align-items: center; gap: .4rem;
+    flex-wrap: wrap; margin: 1.5rem 0; justify-content: center;
+    font-family: var(--sans); font-size: .88rem;
+  }
+  .flow .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: .45rem .9rem;
+    font-weight: 500; white-space: nowrap;
+  }
+  .flow .arr { color: var(--accent); font-size: 1rem; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 3rem 2rem;
+    color: var(--text-light); font-size: .82rem;
+    border-top: 3px double var(--border);
+    font-family: var(--sans);
+  }
+
+  /* ── HIGHLIGHT SPANS ── */
+  em.h1 { color: var(--accent); font-style: normal; font-weight: 600; }
+  em.h2 { color: var(--accent2); font-style: normal; font-weight: 600; }
+  em.h3 { color: var(--accent3); font-style: normal; font-weight: 600; }
+  em.h4 { color: var(--accent4); font-style: normal; font-weight: 600; }
+
+  /* ── MARGIN NOTE ── */
+  .note {
+    font-family: var(--sans);
+    font-size: .82rem;
+    color: var(--text-dim);
+    background: var(--surface2);
+    padding: .6rem 1rem;
+    border-radius: 3px;
+    margin: 1rem 0;
+    border-left: 3px solid var(--yellow);
+  }
+  .note strong { color: var(--yellow); }
+
+  /* ── BLOCKQUOTE ── */
+  blockquote {
+    border-left: 3px solid var(--border);
+    padding-left: 1.25rem;
+    color: var(--text-dim);
+    font-style: italic;
+    margin: 1.25rem 0;
+  }
+
+  /* ── ARROW DEFS (for SVG) ── */
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<nav>
+  <span class="title-mark">Spark Theory</span>
+  <a href="#ch1">I. History</a>
+  <a href="#ch2">II. Architecture</a>
+  <a href="#ch3">III. RDDs</a>
+  <a href="#ch4">IV. DataFrames</a>
+  <a href="#ch5">V. Spark SQL</a>
+  <a href="#ch6">VI. Data I/O</a>
+  <a href="#ch7">VII. MLlib</a>
+  <a href="#ch8">VIII. Ecosystem</a>
+</nav>
+
+<!-- ═══════════════════ TITLE PAGE ═══════════════════ -->
+<div class="title-page">
+  <h1>Apache Spark</h1>
+  <div class="rule"></div>
+  <div class="subtitle-text">A Comprehensive Theoretical Overview &mdash;<br>From the Big Data Revolution to Distributed Machine Learning</div>
+  <div class="meta">Companion Reference for the <em>explore-spark</em> Learning Repository &bull; 2026</div>
+
+  <div class="toc-title">Table of Contents</div>
+  <ol class="toc">
+    <li><a href="#ch1"><span>The Big Data Story: Why Spark Exists</span> <span class="ch">Chapter I</span></a></li>
+    <li><a href="#ch2"><span>Spark Architecture: The Distributed Engine</span> <span class="ch">Chapter II</span></a></li>
+    <li><a href="#ch3"><span>Resilient Distributed Datasets (RDDs)</span> <span class="ch">Chapter III</span></a></li>
+    <li><a href="#ch4"><span>DataFrames &amp; the Catalyst Optimizer</span> <span class="ch">Chapter IV</span></a></li>
+    <li><a href="#ch5"><span>Spark SQL: Declarative Analytics</span> <span class="ch">Chapter V</span></a></li>
+    <li><a href="#ch6"><span>Data I/O: Storage Formats &amp; Strategies</span> <span class="ch">Chapter VI</span></a></li>
+    <li><a href="#ch7"><span>MLlib: Distributed Machine Learning</span> <span class="ch">Chapter VII</span></a></li>
+    <li><a href="#ch8"><span>The Spark Ecosystem &amp; Beyond</span> <span class="ch">Chapter VIII</span></a></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════ CHAPTER I ═══════════════════ -->
+<div class="chapter" id="ch1">
+  <div class="chapter-header">
+    <div class="ch-num">Chapter I</div>
+    <h2>The Big Data Story: Why Spark Exists</h2>
+    <div class="abstract">To understand Apache Spark, one must first understand the problem landscape it was born into &mdash; the exponential growth of data, the limitations of prior solutions, and the intellectual breakthroughs that made distributed in-memory computing possible.</div>
+  </div>
+
+  <h3>1.1 &ensp; The Data Explosion</h3>
+  <p>The early 21st century witnessed a fundamental transformation in the scale of data generated by human activity. Between 2000 and 2010, the volume of digitally stored information grew from roughly 2 exabytes to over 2 zettabytes &mdash; a thousandfold increase. This growth was driven by several concurrent forces: the proliferation of web services (search engines indexing billions of pages), the rise of social platforms generating petabytes of user content daily, the spread of mobile devices creating continuous streams of location and sensor data, and the digitization of previously analog domains such as genomics, astronomy, and financial markets.</p>
+
+  <p>The fundamental challenge was straightforward but profound: <em class="h1">no single machine, regardless of how powerful, could store or process these volumes in any reasonable timeframe</em>. A single server with the fastest available disk could read data at perhaps 100 MB/s; scanning a single petabyte would take over 100 days. Vertical scaling &mdash; buying bigger machines &mdash; had hit economic and physical limits.</p>
+
+  <p>The question that defined the era was: <strong>Can we make hundreds or thousands of inexpensive commodity machines work together as a single system?</strong> This is the essence of distributed computing for data, and it is the question that every technology in this chapter attempted to answer.</p>
+
+  <h3>1.2 &ensp; Precursors: The Theoretical Foundations</h3>
+  <p>The idea of distributed computation was not new. The theoretical groundwork was laid decades earlier. In the 1970s and 1980s, the field of parallel computing explored shared-memory multiprocessors and message-passing systems. Leslie Lamport's work on distributed consensus (1978) and the formalization of Byzantine fault tolerance gave the theoretical vocabulary. However, these systems were largely confined to scientific computing, running on expensive supercomputers.</p>
+
+  <p>What changed in the early 2000s was the convergence of cheap hardware (commodity Linux servers), ubiquitous networking (Gigabit Ethernet in data centers), and the economic motivation of companies like Google, Yahoo!, and Amazon that <em>needed</em> to process web-scale data as a core business function.</p>
+
+  <h3>1.3 &ensp; Google's Breakthrough: GFS and MapReduce</h3>
+  <p>In 2003 and 2004, Google published two seminal papers that would reshape the industry. The first described the <em class="h2">Google File System (GFS)</em>, a distributed file system that split large files into 64 MB chunks and replicated each chunk across three machines. The key insight was embracing failure as normal &mdash; in a cluster of thousands of commodity servers, some machines are always failing. GFS was designed so that any individual failure would be transparently handled.</p>
+
+  <p>The second paper introduced <em class="h2">MapReduce</em>, a programming model for processing large datasets in parallel. The model was deliberately simple: the programmer writes two functions &mdash; a <code>map</code> function that processes input key-value pairs and produces intermediate key-value pairs, and a <code>reduce</code> function that merges all intermediate values associated with the same key. The framework handles partitioning, scheduling, fault tolerance, and inter-machine communication automatically.</p>
+
+  <div class="insight">
+    <div class="insight-title">Key Insight</div>
+    <p>MapReduce's genius was not algorithmic novelty but <strong>abstraction</strong>. By constraining the programming model to two fixed phases, the framework could automatically parallelize, distribute, and recover from failures without the programmer needing to understand distributed systems. It transformed a distributed systems problem into a functional programming exercise.</p>
+  </div>
+
+  <h3>1.4 &ensp; Hadoop: Open-Source MapReduce</h3>
+  <p>In 2006, Doug Cutting and Mike Cafarella released Apache Hadoop &mdash; an open-source implementation of Google's GFS (as HDFS, the Hadoop Distributed File System) and MapReduce. For the first time, any organization could build a cluster from commodity hardware and process massive datasets. The impact was enormous: Yahoo! ran a 4,000-node Hadoop cluster; Facebook built its analytics infrastructure on it; and a thriving ecosystem of supporting tools (Hive for SQL, Pig for scripting, HBase for random access) emerged around it.</p>
+
+  <h3>1.5 &ensp; The Pain Points of MapReduce</h3>
+  <p>Despite its revolutionary impact, MapReduce suffered from several fundamental limitations that became increasingly apparent as use cases diversified:</p>
+
+  <div class="definition">
+    <div class="def-title">Limitation 1: Disk-Bound Intermediate Storage</div>
+    <p>Between every Map and Reduce phase, intermediate data was written to HDFS (disk). For a multi-step pipeline &mdash; say, a data cleaning pipeline with 5 stages &mdash; this meant 5 rounds of full disk writes and reads. Since disk I/O is roughly 100x slower than memory access, this created an enormous bottleneck. Complex workflows that required chaining multiple MapReduce jobs could run for hours when the computation itself was trivial.</p>
+  </div>
+
+  <div class="definition">
+    <div class="def-title">Limitation 2: Rigid Two-Phase Model</div>
+    <p>Every computation had to be expressed as Map followed by Reduce. Many natural operations &mdash; joins, multi-level aggregations, graph traversals &mdash; don't fit neatly into this model. Expressing them required elaborate multi-job chains, each with its own I/O overhead. Simple tasks became architecturally complex.</p>
+  </div>
+
+  <div class="definition">
+    <div class="def-title">Limitation 3: Catastrophic for Iterative Algorithms</div>
+    <p>Machine learning algorithms, PageRank, K-means clustering, and many graph algorithms are inherently iterative &mdash; they repeatedly scan the same data, refining a model until convergence. In MapReduce, each iteration was a separate job that re-read the entire dataset from disk. Running logistic regression for 100 iterations meant reading the dataset from HDFS 100 times. This made MapReduce fundamentally unsuitable for machine learning workloads.</p>
+  </div>
+
+  <div class="definition">
+    <div class="def-title">Limitation 4: Verbosity and Developer Productivity</div>
+    <p>Writing MapReduce programs in Java was notoriously verbose. A simple word count &mdash; the "hello world" of distributed computing &mdash; required roughly 60-80 lines of Java boilerplate: mapper class, reducer class, driver configuration, serialization setup. This severely hindered exploratory data analysis and rapid prototyping.</p>
+  </div>
+
+  <h3>1.6 &ensp; The Birth of Apache Spark</h3>
+  <p>In 2009, at the UC Berkeley AMPLab (Algorithms, Machines, and People Laboratory), a PhD student named Matei Zaharia posed a simple question: <em>"What if we could keep intermediate data in memory across operations, rather than writing it to disk?"</em></p>
+
+  <p>The result was a new abstraction called <em class="h1">Resilient Distributed Datasets (RDDs)</em> &mdash; read-only, partitioned collections of records that could be cached in memory across a cluster. The key innovations were:</p>
+
+  <div class="grid2">
+    <div class="card a">
+      <div class="label">In-Memory Computation</div>
+      <p>Intermediate results stay in RAM. A 10-stage pipeline touches disk only at the beginning (reading source data) and end (writing final output). For iterative algorithms, the dataset is loaded into memory once and scanned repeatedly &mdash; yielding speedups of 10x to 100x over MapReduce.</p>
+    </div>
+    <div class="card b">
+      <div class="label">Lineage-Based Fault Tolerance</div>
+      <p>Rather than replicating data for fault tolerance (expensive), Spark records the sequence of transformations (the <em>lineage</em>) that produced each dataset. If a partition is lost, Spark recomputes it from the source data by replaying the transformations &mdash; a far cheaper mechanism for the read-heavy, write-once workloads typical of analytics.</p>
+    </div>
+    <div class="card c">
+      <div class="label">General DAG Execution</div>
+      <p>Instead of the rigid Map-then-Reduce model, Spark allows arbitrary directed acyclic graphs (DAGs) of transformations. Filter, join, group, aggregate, map &mdash; any combination, in any order. This made expressing complex workflows natural and efficient.</p>
+    </div>
+    <div class="card d">
+      <div class="label">Unified Multi-Language API</div>
+      <p>From the beginning, Spark offered APIs in Scala, Java, and later Python and R. The same word count that required 60+ lines of Java in MapReduce could be written in 3 lines of PySpark. This unlocked Spark for data scientists, not just engineers.</p>
+    </div>
+  </div>
+
+  <h3>1.7 &ensp; Historical Timeline</h3>
+  <div class="timeline">
+    <div class="tl-event">
+      <div class="tl-year">2003&ndash;2004</div>
+      <h4>Google publishes the GFS and MapReduce papers</h4>
+      <p>These papers revealed how Google processed its entire web index using clusters of commodity machines. They became the intellectual foundation for the entire Hadoop ecosystem.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2006</div>
+      <h4>Apache Hadoop is released</h4>
+      <p>Doug Cutting (at Yahoo!) creates an open-source implementation. HDFS provides distributed storage; MapReduce provides distributed computation. The era of Big Data tooling begins.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2008</div>
+      <h4>Hadoop used at web scale</h4>
+      <p>Yahoo! runs a 10,000-node Hadoop cluster. Facebook deploys a 30 PB Hadoop-based data warehouse. Hive (SQL on Hadoop) is created at Facebook, making Hadoop accessible to analysts.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2009</div>
+      <h4>Spark is created at UC Berkeley AMPLab</h4>
+      <p>Matei Zaharia's research project introduces RDDs. The initial paper demonstrates 20x speedup over Hadoop for iterative machine learning workloads on modest clusters.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2010</div>
+      <h4>Spark is open-sourced</h4>
+      <p>The codebase is released as an Apache project. Early adopters begin experimenting with in-memory analytics.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2012</div>
+      <h4>The RDD paper is published</h4>
+      <p>Zaharia et al. publish "Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing" at NSDI. It becomes one of the most cited papers in systems research.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2014</div>
+      <h4>Spark 1.0 &amp; DataFrames</h4>
+      <p>Spark becomes an Apache top-level project. The DataFrame API and Spark SQL are introduced, bringing structured data processing with automatic query optimization (Catalyst) &mdash; a paradigm shift from the low-level RDD API.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2016</div>
+      <h4>Spark 2.0: Structured Streaming &amp; Datasets</h4>
+      <p>Unifies batch and stream processing under a single API. The Dataset API adds compile-time type safety. Tungsten execution engine matures with whole-stage code generation.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2020</div>
+      <h4>Spark 3.0: Adaptive Query Execution</h4>
+      <p>AQE dynamically adjusts query plans at runtime based on actual data statistics &mdash; a major leap in optimizer intelligence. Adds GPU scheduling support and improved Python (Pandas) UDF performance.</p>
+    </div>
+    <div class="tl-event">
+      <div class="tl-year">2023&ndash;2025</div>
+      <h4>Spark 3.4&ndash;3.5+: Spark Connect &amp; Modern Integration</h4>
+      <p>Spark Connect decouples client from server, enabling thin-client access from any language. Improved Pandas API on Spark, Arrow-based data exchange, and tighter integration with cloud-native lakehouse architectures (Delta Lake, Iceberg).</p>
+    </div>
+  </div>
+
+  <h3>1.8 &ensp; Spark vs. MapReduce: A Detailed Comparison</h3>
+  <table class="cmp-table">
+    <thead>
+      <tr><th>Dimension</th><th>Hadoop MapReduce</th><th>Apache Spark</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Intermediate storage</td><td>Disk (HDFS) after every stage</td><td>Memory (RAM), spills to disk only when necessary</td></tr>
+      <tr><td>Execution model</td><td>Rigid Map &rarr; Shuffle &rarr; Reduce</td><td>Arbitrary DAG of transformations and actions</td></tr>
+      <tr><td>Iterative performance</td><td>Each iteration re-reads from disk</td><td>Data cached in memory; iterations scan RAM</td></tr>
+      <tr><td>Latency</td><td>High (job startup overhead ~30s+)</td><td>Lower (executor JVMs kept alive)</td></tr>
+      <tr><td>Ease of use</td><td>~60 lines of Java for word count</td><td>~5 lines of PySpark for word count</td></tr>
+      <tr><td>Languages</td><td>Primarily Java</td><td>Python, Scala, Java, R, SQL</td></tr>
+      <tr><td>Streaming</td><td>Not natively supported</td><td>Structured Streaming (micro-batch &amp; continuous)</td></tr>
+      <tr><td>Machine learning</td><td>Apache Mahout (separate, limited)</td><td>MLlib (integrated, distributed pipelines)</td></tr>
+      <tr><td>Query optimization</td><td>None (user manually optimizes)</td><td>Catalyst optimizer + Adaptive Query Execution</td></tr>
+      <tr><td>Fault tolerance</td><td>Data replication on HDFS</td><td>Lineage-based recomputation of lost partitions</td></tr>
+    </tbody>
+  </table>
+
+  <div class="analogy">
+    <div class="tag">Intuitive Analogy &mdash; The Kitchen</div>
+    <p><strong>MapReduce</strong> is like a chef who, after chopping each ingredient, walks to the refrigerator, carefully stores it on a labeled shelf, closes the door, walks back to the counter, opens the refrigerator, retrieves the ingredient, and begins the next step. For a recipe with ten steps, the chef walks to the refrigerator twenty times.</p>
+    <p><strong>Spark</strong> is like a chef with a large countertop (RAM). Everything stays on the counter &mdash; chop, season, saut&eacute;, plate &mdash; in one continuous workflow. The refrigerator (disk) is only used when the countertop is completely full, which for most recipes never happens.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ CHAPTER II ═══════════════════ -->
+<div class="chapter" id="ch2">
+  <div class="chapter-header">
+    <div class="ch-num">Chapter II</div>
+    <h2>Spark Architecture: The Distributed Engine</h2>
+    <div class="abstract">Understanding Spark's runtime architecture is essential for writing efficient applications. This chapter describes the driver-executor model, the mechanics of partitioning and parallelism, lazy evaluation, the DAG scheduler, and the crucial concept of shuffle operations.</div>
+  </div>
+
+  <h3>2.1 &ensp; The Driver-Executor Model</h3>
+  <p>Every Spark application consists of a single <em class="h1">driver process</em> and a set of <em class="h2">executor processes</em> distributed across the cluster. The driver is the master coordinator; the executors are the worker processes that perform the actual data processing.</p>
+
+  <div class="definition">
+    <div class="def-title">The Driver</div>
+    <p>The driver is the process where your <code>main()</code> function runs. It performs three critical functions: (1) it maintains all the information about the Spark application, (2) it analyzes, distributes, and schedules work across the executors via the DAG and Task schedulers, and (3) it responds to user input and returns results. The driver holds the <code>SparkSession</code> object, which is the unified entry point for all Spark functionality. Crucially, the driver is a <em>single point of failure</em> &mdash; if it crashes, the entire application fails.</p>
+  </div>
+
+  <div class="definition">
+    <div class="def-title">Executors</div>
+    <p>Executors are JVM processes launched on worker nodes by the cluster manager. Each executor has two responsibilities: (1) execute the tasks assigned to it by the driver, and (2) report the status of those tasks and cached data back to the driver. Each executor is allocated a fixed amount of memory and CPU cores at application startup. Within an executor, tasks run in separate threads, sharing the JVM's heap space and any cached data.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" style="max-width:720px">
+      <defs>
+        <marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#8b1a1a"/></marker>
+        <marker id="a2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#1a4f8b"/></marker>
+        <marker id="a3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#5b3a8b"/></marker>
+        <marker id="a4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#1a6b4a"/></marker>
+      </defs>
+      <!-- Driver -->
+      <rect x="250" y="10" width="260" height="100" rx="6" fill="#fff" stroke="#8b1a1a" stroke-width="2"/>
+      <text x="380" y="35" text-anchor="middle" fill="#8b1a1a" font-weight="700" font-family="Source Sans 3, sans-serif" font-size="14">DRIVER PROCESS</text>
+      <text x="380" y="55" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">SparkSession / SparkContext</text>
+      <text x="380" y="72" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">DAG Scheduler &rarr; Task Scheduler</text>
+      <text x="380" y="89" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">Block Tracker &bull; Broadcast Manager</text>
+      <!-- Cluster Manager -->
+      <rect x="285" y="140" width="190" height="44" rx="6" fill="#fff" stroke="#5b3a8b" stroke-width="2"/>
+      <text x="380" y="167" text-anchor="middle" fill="#5b3a8b" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Cluster Manager</text>
+      <text x="380" y="198" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10">(YARN / Mesos / K8s / Standalone)</text>
+      <line x1="380" y1="110" x2="380" y2="140" stroke="#5b3a8b" stroke-width="1.5" marker-end="url(#a3)"/>
+      <!-- Executors -->
+      <rect x="20" y="230" width="200" height="95" rx="6" fill="#fff" stroke="#1a4f8b" stroke-width="2"/>
+      <text x="120" y="255" text-anchor="middle" fill="#1a4f8b" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Executor 1</text>
+      <text x="120" y="275" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">Task &bull; Task &bull; Task &bull; Task</text>
+      <text x="120" y="295" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">Cache (Block Manager)</text>
+      <text x="120" y="315" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10">4 cores &bull; 8 GB RAM</text>
+
+      <rect x="280" y="230" width="200" height="95" rx="6" fill="#fff" stroke="#1a4f8b" stroke-width="2"/>
+      <text x="380" y="255" text-anchor="middle" fill="#1a4f8b" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Executor 2</text>
+      <text x="380" y="275" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">Task &bull; Task &bull; Task &bull; Task</text>
+      <text x="380" y="295" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">Cache (Block Manager)</text>
+      <text x="380" y="315" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10">4 cores &bull; 8 GB RAM</text>
+
+      <rect x="540" y="230" width="200" height="95" rx="6" fill="#fff" stroke="#1a4f8b" stroke-width="2"/>
+      <text x="640" y="255" text-anchor="middle" fill="#1a4f8b" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Executor N</text>
+      <text x="640" y="275" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">Task &bull; Task &bull; Task &bull; Task</text>
+      <text x="640" y="295" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">Cache (Block Manager)</text>
+      <text x="640" y="315" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10">4 cores &bull; 8 GB RAM</text>
+
+      <line x1="320" y1="184" x2="120" y2="230" stroke="#1a4f8b" stroke-width="1.5" marker-end="url(#a2)"/>
+      <line x1="380" y1="184" x2="380" y2="230" stroke="#1a4f8b" stroke-width="1.5" marker-end="url(#a2)"/>
+      <line x1="440" y1="184" x2="640" y2="230" stroke="#1a4f8b" stroke-width="1.5" marker-end="url(#a2)"/>
+    </svg>
+    <figcaption><span class="fig-num">Figure 2.1.</span> The Spark application model. A single driver coordinates N executors provisioned by the cluster manager. Each executor runs multiple concurrent tasks within a single JVM process.</figcaption>
+  </figure>
+
+  <h3>2.2 &ensp; Partitions: The Unit of Parallelism</h3>
+  <p>When Spark ingests a dataset, it divides it into <em class="h1">partitions</em> &mdash; contiguous, non-overlapping chunks of rows. Each partition is an atomic unit of work: one task processes exactly one partition. The degree of parallelism is therefore determined by the number of partitions, not the number of executors or cores directly.</p>
+
+  <p>The relationship between these concepts is precise: if you have 200 partitions and 50 executor cores, then at any given moment 50 tasks run in parallel, with the remaining 150 partitions queued. When a task completes, the next queued partition is immediately dispatched. The optimal number of partitions is typically 2&ndash;4 times the number of available cores, which ensures full utilization even when some tasks finish faster than others (due to data skew or varying computational complexity).</p>
+
+  <div class="insight">
+    <div class="insight-title">Practical Rule of Thumb</div>
+    <p>Too few partitions &rarr; under-utilization (some cores sit idle). Too many partitions &rarr; excessive scheduling overhead (thousands of tiny tasks, each with dispatch and serialization costs). A common heuristic is to target partition sizes of 128 MB&ndash;256 MB each, adjusted based on cluster resources.</p>
+  </div>
+
+  <h3>2.3 &ensp; Lazy Evaluation</h3>
+  <p>Spark employs a concept from functional programming called <em class="h2">lazy evaluation</em>. When you write a chain of transformations &mdash; <code>df.filter(...).select(...).groupBy(...).agg(...)</code> &mdash; Spark does <strong>not</strong> execute any of these operations immediately. Instead, it builds an internal representation of the computation: a logical plan that records <em>what</em> needs to be done, without doing it.</p>
+
+  <p>Execution is triggered only when you invoke an <em class="h1">action</em> &mdash; an operation that demands a concrete result be returned to the driver or written to storage. Actions include <code>.show()</code>, <code>.count()</code>, <code>.collect()</code>, <code>.write.parquet()</code>, and <code>.take(n)</code>.</p>
+
+  <p>The reason for this design is optimization. By deferring execution until the entire pipeline is known, Spark's Catalyst optimizer can analyze the complete plan and apply transformations that would be impossible with eager execution: reordering operations, pushing filters closer to the data source, eliminating unnecessary columns, and selecting optimal join strategies. In essence, lazy evaluation turns your code into a <em>specification of intent</em> that Spark can then fulfill in the most efficient manner possible.</p>
+
+  <div class="analogy">
+    <div class="tag">Intuitive Analogy &mdash; The Shopping Trip</div>
+    <p>Eager execution would mean driving to the store each time you think of an item you need. Lazy evaluation means writing all items on a list first, then making a single optimized trip &mdash; grouping items by store aisle, skipping items you already have, and taking the shortest route. The list is your logical plan; the trip is the physical execution.</p>
+  </div>
+
+  <h3>2.4 &ensp; The DAG: Directed Acyclic Graph of Computation</h3>
+  <p>When an action triggers execution, the DAG Scheduler translates the logical plan into a <em class="h3">physical execution graph</em> &mdash; a directed acyclic graph (DAG) where each node represents a computation step and edges represent data dependencies. The DAG is then partitioned into <em class="h1">stages</em>.</p>
+
+  <p>The critical concept here is the <em>stage boundary</em>. Within a stage, all transformations are <em class="h4">narrow</em> &mdash; each output partition depends on at most one input partition. These operations (filter, map, select, union) can be pipelined within a single task without any data exchange. The task reads a partition, applies all the narrow transformations in sequence, and produces an output partition. This pipelining is extremely efficient because data never leaves the task's local memory.</p>
+
+  <p>A new stage begins whenever a <em class="h1">wide transformation</em> (also called a <em>shuffle dependency</em>) is encountered. Wide transformations are those where each output partition depends on data from <em>multiple</em> input partitions &mdash; <code>groupBy</code>, <code>reduceByKey</code>, <code>join</code>, <code>repartition</code>, and <code>distinct</code> are the most common. These operations require data to be redistributed across the cluster, which is the shuffle.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" style="max-width:700px">
+      <!-- Stage 1 -->
+      <rect x="10" y="50" width="190" height="85" rx="6" fill="#fff" stroke="#1a6b4a" stroke-width="2"/>
+      <text x="105" y="75" text-anchor="middle" fill="#1a6b4a" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Stage 1</text>
+      <text x="105" y="95" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">read &rarr; filter &rarr; select &rarr; map</text>
+      <text x="105" y="115" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10">All narrow transforms</text>
+      <text x="105" y="128" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10">Pipelined in memory per partition</text>
+
+      <!-- Shuffle -->
+      <rect x="235" y="60" width="110" height="65" rx="4" fill="rgba(139,26,26,.06)" stroke="#8b1a1a" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="290" y="85" text-anchor="middle" fill="#8b1a1a" font-weight="700" font-family="Source Sans 3, sans-serif" font-size="12">SHUFFLE</text>
+      <text x="290" y="102" text-anchor="middle" fill="#8b1a1a" font-family="Source Sans 3, sans-serif" font-size="10">groupBy(key)</text>
+      <text x="290" y="115" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="9">Network + disk I/O</text>
+
+      <!-- Stage 2 -->
+      <rect x="380" y="50" width="190" height="85" rx="6" fill="#fff" stroke="#1a4f8b" stroke-width="2"/>
+      <text x="475" y="75" text-anchor="middle" fill="#1a4f8b" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Stage 2</text>
+      <text x="475" y="95" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11">aggregate &rarr; filter &rarr; map</text>
+      <text x="475" y="115" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10">All narrow transforms</text>
+      <text x="475" y="128" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10">Pipelined in memory per partition</text>
+
+      <!-- Result -->
+      <rect x="605" y="67" width="90" height="50" rx="4" fill="#8b1a1a" stroke="none"/>
+      <text x="650" y="97" text-anchor="middle" fill="#fff" font-weight="700" font-family="Source Sans 3, sans-serif" font-size="12">ACTION</text>
+
+      <line x1="200" y1="92" x2="235" y2="92" stroke="#5e5e5e" stroke-width="1.5" marker-end="url(#a1)"/>
+      <line x1="345" y1="92" x2="380" y2="92" stroke="#5e5e5e" stroke-width="1.5" marker-end="url(#a2)"/>
+      <line x1="570" y1="92" x2="605" y2="92" stroke="#5e5e5e" stroke-width="1.5" marker-end="url(#a1)"/>
+
+      <text x="105" y="38" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10" font-style="italic">No data exchange</text>
+      <text x="290" y="48" text-anchor="middle" fill="#8b1a1a" font-family="Source Sans 3, sans-serif" font-size="10" font-style="italic">Data crosses the network</text>
+      <text x="475" y="38" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="10" font-style="italic">No data exchange</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 2.2.</span> Stage decomposition. Within each stage, transformations are pipelined in memory on each partition. Stages are separated by shuffle boundaries where data must be exchanged across the network.</figcaption>
+  </figure>
+
+  <h3>2.5 &ensp; The Shuffle: Spark's Most Expensive Operation</h3>
+  <p>The shuffle is the most critical concept to understand for Spark performance tuning. When a shuffle occurs, the following sequence takes place:</p>
+
+  <p><strong>Phase 1 &mdash; Map side (write):</strong> Each task in the preceding stage partitions its output data by the shuffle key (e.g., the <code>groupBy</code> column). It writes this partitioned data to local disk in sorted order, creating one file segment per target partition. This involves serialization, sorting, and disk I/O.</p>
+
+  <p><strong>Phase 2 &mdash; Reduce side (read):</strong> Each task in the next stage pulls its assigned partition segments from every mapper node over the network. These segments are then merged (since they're pre-sorted) into a single sorted stream for that partition. This involves network transfer, deserialization, and merge operations.</p>
+
+  <p>The total data transferred during a shuffle is proportional to the size of the intermediate dataset. In extreme cases (large-scale groupBy on high-cardinality keys, or cross joins), shuffles can move terabytes across the network, taking minutes or even hours. This is why <em class="h1">minimizing shuffles is the single most impactful optimization in Spark programming</em>.</p>
+
+  <details>
+    <summary>Strategies for Minimizing Shuffles</summary>
+    <div class="inner">
+      <h4>1. Broadcast Joins</h4>
+      <p>If one side of a join is small enough to fit in executor memory (typically &lt; 10 MB by default, configurable up to hundreds of MB), Spark can broadcast the small table to all executors, eliminating the need to shuffle the large table entirely. This converts an O(n &times; m) shuffle into an O(m) broadcast.</p>
+      <h4>2. Pre-partitioning</h4>
+      <p>If you know your data will be repeatedly grouped or joined on the same key, repartitioning it once upfront by that key avoids repeated shuffles in subsequent operations. Each downstream operation will find its data already co-located.</p>
+      <h4>3. Using <code>reduceByKey</code> instead of <code>groupByKey</code></h4>
+      <p>In the RDD API, <code>groupByKey</code> shuffles all values to the reducer, then aggregates. <code>reduceByKey</code> performs a local pre-aggregation (a "combiner") on each partition <em>before</em> the shuffle, dramatically reducing the volume of data transferred. In the DataFrame API, Spark applies this optimization automatically.</p>
+      <h4>4. Coalesce vs. Repartition</h4>
+      <p><code>repartition(n)</code> always triggers a full shuffle. <code>coalesce(n)</code> reduces partitions by merging them locally (no shuffle), but can only decrease the partition count, not increase it.</p>
+      <h4>5. Bucketing</h4>
+      <p>When writing data to storage, you can bucket by a column. Future joins and aggregations on that column will avoid shuffles because the data is already pre-partitioned on disk.</p>
+    </div>
+  </details>
+
+  <h3>2.6 &ensp; Memory Management</h3>
+  <p>Each executor's memory is divided into several regions. The <em>Unified Memory Manager</em> (default since Spark 1.6) dynamically shares memory between two regions: <em class="h2">execution memory</em> (used for shuffles, sorts, aggregations &mdash; temporary buffers during computation) and <em class="h4">storage memory</em> (used for caching RDDs/DataFrames and broadcast variables). When one region is under-utilized, the other can borrow its space, improving overall efficiency.</p>
+
+  <p>Additionally, <em class="h3">Tungsten</em> (Spark's execution engine) manages data off-heap when possible, using manual memory management with <code>sun.misc.Unsafe</code> to bypass Java's garbage collector. This is crucial for large-scale workloads where garbage collection pauses would otherwise cause severe performance degradation.</p>
+
+  <div class="note">
+    <strong>Note:</strong> The default memory fraction is 60% for unified execution/storage (configurable via <code>spark.memory.fraction</code>) and 40% reserved for user data structures and internal metadata. Within the unified region, the default split is 50/50 between execution and storage (<code>spark.memory.storageFraction</code>), but either side can borrow from the other dynamically.
+  </div>
+</div>
+
+<!-- ═══════════════════ CHAPTER III ═══════════════════ -->
+<div class="chapter" id="ch3">
+  <div class="chapter-header">
+    <div class="ch-num">Chapter III</div>
+    <h2>Resilient Distributed Datasets (RDDs)</h2>
+    <div class="abstract">RDDs are the foundational abstraction of Apache Spark &mdash; the data structure upon which all higher-level APIs are built. Understanding RDDs provides deep insight into how Spark achieves fault tolerance, parallelism, and performance.</div>
+  </div>
+
+  <h3>3.1 &ensp; Formal Definition</h3>
+  <p>An RDD is a <em class="h1">read-only, partitioned collection of records</em> that can be operated on in parallel. Each RDD is characterized by five properties, often called the "five main properties" in the Spark source code:</p>
+
+  <div class="definition">
+    <div class="def-title">The Five Properties of an RDD</div>
+    <p><strong>1. A list of partitions</strong> &mdash; the data is divided into chunks that can be processed independently.</p>
+    <p><strong>2. A function for computing each partition</strong> &mdash; the transformation logic that, given parent partition(s), produces the data in this partition.</p>
+    <p><strong>3. A list of dependencies on other RDDs</strong> &mdash; the lineage graph, either narrow (one-to-one partition mapping) or wide (one-to-many).</p>
+    <p><strong>4. Optionally, a partitioner</strong> &mdash; for key-value RDDs, a function that determines which partition a given key maps to (e.g., <code>HashPartitioner</code>, <code>RangePartitioner</code>).</p>
+    <p><strong>5. Optionally, preferred locations for each partition</strong> &mdash; data locality hints (e.g., which HDFS nodes hold the partition's block), used by the scheduler to minimize network transfer.</p>
+  </div>
+
+  <h3>3.2 &ensp; Transformations: Lazy Recipe Construction</h3>
+  <p>Transformations are operations that create a new RDD from an existing one. They are <em>lazy</em> &mdash; they merely define a computation graph without executing it. Transformations fall into two categories based on their data dependency pattern:</p>
+
+  <div class="grid2">
+    <div class="card d">
+      <div class="label">Narrow Transformations</div>
+      <p>Each output partition depends on at most one input partition. The data stays local &mdash; no network transfer is needed.</p>
+      <p><code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>mapPartitions</code>, <code>union</code>, <code>sample</code></p>
+      <p>These are cheap and pipeline together within a single stage.</p>
+    </div>
+    <div class="card a">
+      <div class="label">Wide Transformations</div>
+      <p>Each output partition may depend on data from <em>all</em> input partitions. This requires a shuffle &mdash; data redistribution across the network.</p>
+      <p><code>groupByKey</code>, <code>reduceByKey</code>, <code>join</code>, <code>sortByKey</code>, <code>repartition</code>, <code>distinct</code></p>
+      <p>These are expensive and create stage boundaries.</p>
+    </div>
+  </div>
+
+  <h3>3.3 &ensp; Actions: Triggering Computation</h3>
+  <p>Actions are operations that demand a concrete result &mdash; either returning data to the driver or writing it to external storage. Only when an action is invoked does Spark traverse the lineage graph, compile it into stages and tasks, and execute it on the cluster.</p>
+
+  <p>Common actions include: <code>collect()</code> (returns all data to driver &mdash; use with caution on large datasets), <code>count()</code>, <code>first()</code>, <code>take(n)</code>, <code>reduce(func)</code>, <code>saveAsTextFile(path)</code>, and <code>foreach(func)</code>.</p>
+
+  <h3>3.4 &ensp; Lineage and Fault Tolerance</h3>
+  <p>Traditional distributed systems achieve fault tolerance through <em>data replication</em>: every piece of data is copied to 2&ndash;3 machines. While reliable, this is expensive in both storage and network bandwidth. RDDs take a fundamentally different approach.</p>
+
+  <p>Instead of replicating data, Spark records the <em class="h1">lineage</em> of each RDD &mdash; the complete sequence of transformations from the original data source. If any partition is lost due to a node failure, Spark reconstructs it by replaying only the transformations needed for that specific partition from the source data. Because transformations are deterministic functions, the recomputed partition is identical to the lost one.</p>
+
+  <figure>
+    <svg viewBox="0 0 650 160" xmlns="http://www.w3.org/2000/svg" style="max-width:620px">
+      <rect x="10" y="50" width="100" height="50" rx="4" fill="#fff" stroke="#888" stroke-width="1.5"/>
+      <text x="60" y="80" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11" font-weight="600">textFile()</text>
+      <line x1="110" y1="75" x2="145" y2="75" stroke="#888" stroke-width="1.5" marker-end="url(#a4)"/>
+      <rect x="145" y="50" width="100" height="50" rx="4" fill="#fff" stroke="#1a6b4a" stroke-width="1.5"/>
+      <text x="195" y="80" text-anchor="middle" fill="#1a6b4a" font-family="Source Sans 3, sans-serif" font-size="11" font-weight="600">flatMap()</text>
+      <line x1="245" y1="75" x2="280" y2="75" stroke="#888" stroke-width="1.5" marker-end="url(#a4)"/>
+      <rect x="280" y="50" width="100" height="50" rx="4" fill="#fff" stroke="#1a6b4a" stroke-width="1.5"/>
+      <text x="330" y="80" text-anchor="middle" fill="#1a6b4a" font-family="Source Sans 3, sans-serif" font-size="11" font-weight="600">map()</text>
+      <line x1="380" y1="75" x2="415" y2="75" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+      <rect x="415" y="50" width="120" height="50" rx="4" fill="#fff" stroke="#8b1a1a" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="475" y="80" text-anchor="middle" fill="#8b1a1a" font-family="Source Sans 3, sans-serif" font-size="11" font-weight="600">reduceByKey()</text>
+      <line x1="535" y1="75" x2="570" y2="75" stroke="#888" stroke-width="1.5" marker-end="url(#a4)"/>
+      <rect x="570" y="55" width="60" height="40" rx="4" fill="#1a6b4a"/>
+      <text x="600" y="80" text-anchor="middle" fill="#fff" font-family="Source Sans 3, sans-serif" font-size="10" font-weight="700">Result</text>
+
+      <text x="60" y="40" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="9">Source</text>
+      <text x="195" y="40" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="9">Narrow</text>
+      <text x="330" y="40" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="9">Narrow</text>
+      <text x="475" y="40" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="9">Wide (shuffle)</text>
+
+      <text x="325" y="140" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11" font-style="italic">The lineage: if any partition of the result is lost, Spark replays this chain from the source.</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 3.1.</span> RDD lineage graph for a word count pipeline. Narrow dependencies (green) are pipelined; the wide dependency (red, dashed) creates a stage boundary with a shuffle.</figcaption>
+  </figure>
+
+  <p>This approach is efficient because: (1) for narrow dependencies, only the lost partition needs recomputation, not the entire dataset; (2) the source data is typically stored on a fault-tolerant system (HDFS) and can be re-read; and (3) for most analytics workloads, recomputation is cheaper than maintaining replicas of every intermediate dataset.</p>
+
+  <h3>3.5 &ensp; Persistence and Caching</h3>
+  <p>While lineage provides fault tolerance, recomputing an RDD from scratch every time it's used in an action is inefficient if that RDD is accessed repeatedly. Spark provides <code>persist()</code> and <code>cache()</code> methods to materialize an RDD in memory (or memory + disk) across the cluster. Cached partitions are stored in executor memory and reused across actions without recomputation.</p>
+
+  <p>The persistence levels include <code>MEMORY_ONLY</code> (default for <code>cache()</code>), <code>MEMORY_AND_DISK</code> (spills to disk if memory is full), <code>MEMORY_ONLY_SER</code> (serialized form, uses less memory but more CPU), <code>DISK_ONLY</code>, and replicated variants (<code>MEMORY_ONLY_2</code>). The choice depends on the trade-off between memory consumption, CPU overhead, and recomputation cost.</p>
+
+  <h3>3.6 &ensp; When to Use RDDs in Modern Spark</h3>
+  <p>With the introduction of DataFrames (2014) and Datasets (2016), direct RDD usage has become uncommon in application code. DataFrames provide automatic query optimization, type-safe column operations, and significantly better performance through Tungsten's code generation. However, RDDs remain relevant in several scenarios: (1) processing unstructured data that doesn't conform to a tabular schema, (2) when you need fine-grained control over physical data partitioning, (3) when working with custom data types that don't map well to Spark's type system, and (4) when extending Spark's internals or writing custom data sources.</p>
+
+  <p>It is important to understand RDDs even if you never use them directly, because <em class="h1">DataFrames are implemented on top of RDDs</em>. The concepts of partitions, lineage, narrow/wide dependencies, stages, and shuffles apply identically to DataFrames. The DataFrame API simply provides a higher-level interface that enables automatic optimization.</p>
+</div>
+
+<!-- ═══════════════════ CHAPTER IV ═══════════════════ -->
+<div class="chapter" id="ch4">
+  <div class="chapter-header">
+    <div class="ch-num">Chapter IV</div>
+    <h2>DataFrames &amp; the Catalyst Optimizer</h2>
+    <div class="abstract">DataFrames represent the most significant API evolution in Spark's history. By introducing schema awareness and automatic query optimization, they made Spark dramatically faster and more accessible while enabling performance parity across languages.</div>
+  </div>
+
+  <h3>4.1 &ensp; From RDDs to Structured Data</h3>
+  <p>An RDD is an opaque collection of arbitrary objects. From Spark's perspective, each record is a "black box" &mdash; it knows nothing about the internal structure of the data. This means Spark cannot optimize operations: it must execute the user's functions exactly as written, even if they're inefficient.</p>
+
+  <p>A DataFrame adds <em class="h2">structure</em>. It is a distributed collection of data organized into named columns with defined data types &mdash; conceptually identical to a table in a relational database or a DataFrame in Pandas/R. Because Spark knows the <em>schema</em> (column names, types, nullability), it can reason about the data algebraically and apply a rich set of optimizations.</p>
+
+  <div class="grid2">
+    <div class="card a">
+      <div class="label">RDD: Opaque</div>
+      <p><code>rdd.filter(lambda x: x[2] > 30)</code></p>
+      <p>Spark sees: "apply an opaque Python function to each record." It cannot inspect <code>x[2] > 30</code>, push the filter down, or skip unused fields. It must serialize every record, send it to a Python process, evaluate the function, and deserialize the result.</p>
+    </div>
+    <div class="card d">
+      <div class="label">DataFrame: Transparent</div>
+      <p><code>df.filter(df.age > 30)</code></p>
+      <p>Spark sees: "filter column 'age' (IntegerType) where value &gt; 30." It can push this filter into the data source (Parquet column pruning), evaluate it in JVM-native code (no Python serialization), and skip all columns except 'age' for the filter evaluation.</p>
+    </div>
+  </div>
+
+  <h3>4.2 &ensp; The Catalyst Optimizer: Four Phases</h3>
+  <p>Catalyst is Spark SQL's extensible query optimizer, inspired by decades of research in relational database query optimization. Every DataFrame operation and SQL query passes through four distinct phases before execution:</p>
+
+  <div class="flow">
+    <div class="step">Your Code</div>
+    <div class="arr">&rarr;</div>
+    <div class="step" style="border-color:var(--accent3)">Unresolved Plan</div>
+    <div class="arr">&rarr;</div>
+    <div class="step" style="border-color:var(--accent2)">Analyzed Plan</div>
+    <div class="arr">&rarr;</div>
+    <div class="step" style="border-color:var(--accent4)">Optimized Plan</div>
+    <div class="arr">&rarr;</div>
+    <div class="step" style="border-color:var(--accent)">Physical Plans</div>
+    <div class="arr">&rarr;</div>
+    <div class="step" style="background:var(--accent);color:#fff">Execute</div>
+  </div>
+
+  <h4>Phase 1: Unresolved Logical Plan</h4>
+  <p>When you write DataFrame code or SQL, Spark parses it into an abstract syntax tree (AST). At this stage, column names and table references are unresolved &mdash; Spark hasn't verified that they exist. The plan is a purely syntactic representation of your query.</p>
+
+  <h4>Phase 2: Analysis (Resolved Logical Plan)</h4>
+  <p>The analyzer resolves column names, table names, and function references using the <em>Catalog</em> &mdash; Spark's metadata store that knows about registered tables, their schemas, and available functions. If a column doesn't exist, this is where you get an <code>AnalysisException</code>. Type coercions (e.g., comparing an integer to a double) are also applied here.</p>
+
+  <h4>Phase 3: Logical Optimization</h4>
+  <p>This is where Catalyst applies <em class="h2">rule-based optimizations</em> to the logical plan &mdash; transformations that are always beneficial regardless of data characteristics. The major optimizations include:</p>
+
+  <details>
+    <summary>Predicate Pushdown</summary>
+    <div class="inner">
+      <p>Filters are moved as early as possible in the plan &mdash; ideally into the data source itself. If you write <code>df.join(other).filter(df.age > 30)</code>, Catalyst rewrites this to <code>df.filter(df.age > 30).join(other)</code>, dramatically reducing the data that enters the join. For Parquet sources, the filter can be pushed into the Parquet reader, which uses column statistics (min/max per row group) to skip entire file sections.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Column Pruning (Projection Pushdown)</summary>
+    <div class="inner">
+      <p>If your query uses only 5 of 200 columns, Spark tells the data source to read only those 5 columns. With columnar formats like Parquet, this means physically reading ~2.5% of the data from disk. This optimization is automatic and often the single largest performance gain for wide datasets.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Constant Folding</summary>
+    <div class="inner">
+      <p>Expressions with constant sub-expressions are evaluated at planning time. For example, <code>WHERE year = 2020 + 5</code> is rewritten to <code>WHERE year = 2025</code> at compile time, not computed per-row at runtime.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Boolean Expression Simplification</summary>
+    <div class="inner">
+      <p>Complex boolean predicates are simplified using algebraic rules. <code>WHERE true AND x > 5</code> becomes <code>WHERE x > 5</code>. <code>WHERE x > 5 OR true</code> becomes <code>WHERE true</code> (no filter needed). Redundant conditions are eliminated.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Combine Filters and Projections</summary>
+    <div class="inner">
+      <p>Adjacent filter operations are merged into a single filter with an AND condition. Adjacent projections (select operations) are merged to minimize the number of passes over the data. This reduces overhead from intermediate operators.</p>
+    </div>
+  </details>
+
+  <h4>Phase 4: Physical Planning</h4>
+  <p>The optimized logical plan is translated into one or more <em>physical plans</em> &mdash; concrete execution strategies. Spark generates multiple candidate plans and selects the best one using a <em class="h1">cost model</em> that considers data statistics (sizes, row counts, column cardinalities). Key decisions at this stage include:</p>
+
+  <div class="definition">
+    <div class="def-title">Join Strategy Selection</div>
+    <p><strong>Broadcast Hash Join:</strong> If one side of a join is below the broadcast threshold (default 10 MB, configurable via <code>spark.sql.autoBroadcastJoinThreshold</code>), the small table is broadcast to all executors and joined via a local hash lookup. No shuffle needed &mdash; O(n) time where n is the large table size.</p>
+    <p><strong>Sort-Merge Join:</strong> Both sides are shuffled by the join key, sorted, and merged. This is Spark's default for large-large joins. It requires a full shuffle of both tables but scales to arbitrary data sizes.</p>
+    <p><strong>Shuffle Hash Join:</strong> Both sides are shuffled by the join key; the smaller side is built into a hash table per partition. Faster than sort-merge for skewed or moderately-sized joins but can cause out-of-memory errors if partitions are too large.</p>
+  </div>
+
+  <h3>4.3 &ensp; Tungsten: Execution Engine Optimization</h3>
+  <p>While Catalyst optimizes the <em>plan</em>, Project Tungsten optimizes the <em>execution</em>. It addresses three major performance bottlenecks in JVM-based data processing:</p>
+
+  <p><strong>Memory management:</strong> Tungsten manages memory explicitly (off-heap, using <code>sun.misc.Unsafe</code>) rather than relying on JVM objects and garbage collection. It stores data in a dense, binary format with known layouts, reducing memory overhead from ~5x (JVM objects) to near 1x (raw bytes).</p>
+
+  <p><strong>Cache-aware computation:</strong> Tungsten's memory layouts are designed to exploit CPU cache hierarchies. When sorting, it uses pointer-based sorting on fixed-length keys that fit in cache lines, with the actual data stored separately. This minimizes cache misses, which are the dominant bottleneck in modern CPUs.</p>
+
+  <p><strong>Whole-stage code generation:</strong> Rather than interpreting the query plan operator-by-operator (with virtual function calls at every step), Tungsten compiles the entire stage into a single optimized Java function using Janino (a runtime Java compiler). This eliminates virtual dispatch overhead and enables the JIT compiler to apply further optimizations like loop unrolling and SIMD vectorization. The result is code that approaches hand-written performance.</p>
+
+  <h3>4.4 &ensp; Adaptive Query Execution (AQE)</h3>
+  <p>Introduced in Spark 3.0, AQE represents a paradigm shift from static optimization to <em class="h3">dynamic runtime optimization</em>. Traditional Catalyst optimizations are applied before execution based on estimated statistics. AQE re-optimizes the query <em>during execution</em> based on <em>actual</em> runtime statistics collected after each stage completes.</p>
+
+  <p>AQE performs three main runtime optimizations: (1) <em>dynamically coalescing shuffle partitions</em> &mdash; if post-shuffle partitions are too small, AQE merges them to reduce task overhead; (2) <em>dynamically switching join strategies</em> &mdash; if a table turns out to be smaller than estimated after filtering, AQE can switch from sort-merge to broadcast join mid-execution; and (3) <em>dynamically handling skewed joins</em> &mdash; if a partition is disproportionately large, AQE splits it into smaller sub-partitions that are processed in parallel.</p>
+</div>
+
+<!-- ═══════════════════ CHAPTER V ═══════════════════ -->
+<div class="chapter" id="ch5">
+  <div class="chapter-header">
+    <div class="ch-num">Chapter V</div>
+    <h2>Spark SQL: Declarative Analytics at Scale</h2>
+    <div class="abstract">Spark SQL unifies relational queries with procedural data processing, allowing users to express transformations in SQL, the DataFrame API, or both &mdash; with identical performance characteristics.</div>
+  </div>
+
+  <h3>5.1 &ensp; The Unification Principle</h3>
+  <p>One of Spark SQL's most powerful design decisions is that <em class="h1">SQL queries and DataFrame operations compile to the same execution plan</em>. This means there is zero performance difference between the two interfaces. The choice between them is purely one of syntax preference and ergonomics.</p>
+
+  <div class="grid2">
+    <div class="card c">
+      <div class="label">DataFrame API</div>
+      <pre><code>df.filter(df.age > 30)
+  .groupBy("dept")
+  .agg(count("*").alias("cnt"))
+  .orderBy(desc("cnt"))</code></pre>
+    </div>
+    <div class="card b">
+      <div class="label">SQL</div>
+      <pre><code>SELECT dept, COUNT(*) AS cnt
+FROM employees
+WHERE age > 30
+GROUP BY dept
+ORDER BY cnt DESC</code></pre>
+    </div>
+  </div>
+  <p>Both produce <em>identical</em> optimized physical plans through Catalyst. You can verify this by calling <code>.explain(True)</code> on either.</p>
+
+  <h3>5.2 &ensp; Temporary Views and the Catalog</h3>
+  <p>To use SQL syntax, you register a DataFrame as a <em>temporary view</em>: <code>df.createOrReplaceTempView("employees")</code>. This does not copy or move data &mdash; it simply registers the DataFrame's logical plan under a name in Spark's Catalog. SQL queries then reference this name. Views are session-scoped (visible only within the current SparkSession) unless created as global temp views.</p>
+
+  <p>The Catalog is Spark's metadata management system. It stores table schemas, view definitions, UDF registrations, and database information. It can integrate with external metastores like Apache Hive's metastore, enabling Spark SQL to query tables defined by other tools in the Hadoop ecosystem.</p>
+
+  <h3>5.3 &ensp; Window Functions</h3>
+  <p>Window functions are among the most powerful features of Spark SQL. Unlike regular aggregations (which collapse rows into a single result per group), window functions compute a value for each row based on a "window" of related rows. They enable calculations like running totals, moving averages, rankings, and lead/lag comparisons without self-joins.</p>
+
+  <p>A window specification defines three components: (1) the <em>partition</em> (which groups of rows to consider &mdash; equivalent to GROUP BY but without collapsing), (2) the <em>ordering</em> (how rows within each partition are sorted), and (3) the <em>frame</em> (which rows relative to the current row are included in the computation, e.g., "3 preceding rows to current row").</p>
+
+  <h3>5.4 &ensp; User-Defined Functions (UDFs)</h3>
+  <p>When Spark's built-in functions don't suffice, UDFs allow you to extend Spark SQL with custom logic. However, UDFs have significant performance implications.</p>
+
+  <p><em class="h1">Standard Python UDFs</em> are the most common but the least performant. Each row must be serialized, sent to a Python process (via a socket), processed, and the result deserialized back to the JVM. This Python-JVM serialization overhead can be 10&ndash;100x slower than native Spark operations.</p>
+
+  <p><em class="h4">Pandas UDFs</em> (vectorized UDFs, introduced in Spark 2.3) dramatically improve performance by operating on batches of rows using Apache Arrow for efficient columnar data transfer between the JVM and Python. Instead of one row at a time, they process entire partitions as Pandas DataFrames, leveraging NumPy's optimized C implementations.</p>
+
+  <p><em class="h2">Scala/Java UDFs</em> run natively in the JVM without serialization overhead, but still prevent Catalyst from inspecting and optimizing the function's logic. When possible, prefer composing Spark's built-in functions over writing UDFs.</p>
+</div>
+
+<!-- ═══════════════════ CHAPTER VI ═══════════════════ -->
+<div class="chapter" id="ch6">
+  <div class="chapter-header">
+    <div class="ch-num">Chapter VI</div>
+    <h2>Data I/O: Storage Formats &amp; Strategies</h2>
+    <div class="abstract">The choice of storage format and partitioning strategy profoundly affects Spark performance. This chapter explains why columnar formats dominate analytics workloads and how disk-level partitioning enables order-of-magnitude speedups.</div>
+  </div>
+
+  <h3>6.1 &ensp; Row-Oriented vs. Columnar Storage</h3>
+  <p>In <em class="h1">row-oriented</em> formats (CSV, JSON, Avro), each record is stored contiguously: all fields of row 1, then all fields of row 2, and so on. This is optimal for <em>transactional</em> workloads that read or write complete records (e.g., "fetch all details for customer 12345").</p>
+
+  <p>In <em class="h2">columnar</em> formats (Parquet, ORC), all values of a single column are stored contiguously: all ages, then all names, then all salaries. This layout has three profound advantages for analytical workloads:</p>
+
+  <div class="definition">
+    <div class="def-title">Advantage 1: Column Pruning</div>
+    <p>Analytical queries typically access a small subset of columns (e.g., "average salary by department" touches 2 of 50 columns). Columnar storage allows Spark to read only the columns needed, physically skipping the rest on disk. For a 50-column dataset where you need 2 columns, this is a 25x reduction in I/O.</p>
+  </div>
+  <div class="definition">
+    <div class="def-title">Advantage 2: Superior Compression</div>
+    <p>Values within a single column share the same data type and often have similar distributions. A column of ages (integers, range 0&ndash;120) compresses far more efficiently than a row containing mixed types (string name, integer age, float salary, timestamp hire_date). Parquet typically achieves 2&ndash;10x compression ratios, further reducing I/O.</p>
+  </div>
+  <div class="definition">
+    <div class="def-title">Advantage 3: Predicate Pushdown via Statistics</div>
+    <p>Parquet stores min/max statistics for each column chunk (row group, typically ~128 MB of uncompressed data). When Spark pushes a filter like <code>age > 50</code>, the Parquet reader can skip entire row groups where the max age is &le; 50 without reading any data. This can eliminate 90%+ of disk reads for selective queries.</p>
+  </div>
+
+  <h3>6.2 &ensp; Format Comparison</h3>
+  <table class="cmp-table">
+    <thead>
+      <tr><th>Format</th><th>Layout</th><th>Schema</th><th>Splittable</th><th>Compression</th><th>Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>CSV</strong></td><td>Row</td><td>No</td><td>Yes</td><td>Poor</td><td>Human readability, interchange</td></tr>
+      <tr><td><strong>JSON</strong></td><td>Row</td><td>Semi-structured</td><td>Line-delimited: yes</td><td>Poor</td><td>APIs, nested/semi-structured data</td></tr>
+      <tr><td><strong>Avro</strong></td><td>Row</td><td>Embedded</td><td>Yes</td><td>Good</td><td>Streaming, schema evolution</td></tr>
+      <tr><td><strong>Parquet</strong></td><td>Columnar</td><td>Embedded</td><td>Yes</td><td>Excellent</td><td>Spark analytics, data lakes</td></tr>
+      <tr><td><strong>ORC</strong></td><td>Columnar</td><td>Embedded</td><td>Yes</td><td>Excellent</td><td>Hive ecosystem, ACID</td></tr>
+      <tr><td><strong>Delta Lake</strong></td><td>Columnar (Parquet)</td><td>Yes + ACID</td><td>Yes</td><td>Excellent</td><td>Lakehouse, versioned data</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.3 &ensp; Disk Partitioning</h3>
+  <p>When writing data, Spark can <em>partition</em> the output by one or more columns: <code>df.write.partitionBy("year", "region").parquet("...")</code>. This creates a directory hierarchy: <code>year=2024/region=US/part-00000.parquet</code>. When subsequent queries filter on these columns (<code>WHERE year = 2024 AND region = 'US'</code>), Spark performs <em class="h1">partition pruning</em> &mdash; it reads only the matching directories, completely skipping all others. On a dataset partitioned by date with 365 days, filtering to one day reads 1/365th of the data.</p>
+
+  <p>Choosing partition columns wisely is critical. Good partition columns have low-to-moderate cardinality (10&ndash;10,000 distinct values) and are frequently used in WHERE clauses. Partitioning on a high-cardinality column (e.g., user_id with millions of values) creates millions of tiny files, which overwhelms the file system and is counter-productive.</p>
+
+  <h3>6.4 &ensp; Bucketing</h3>
+  <p>Bucketing is a complementary strategy to partitioning. While partitioning creates directory-level splits based on column values, bucketing hashes records by a specified column into a fixed number of files within each partition. The key benefit: when two tables are bucketed on the same column with the same number of buckets, joins between them can be performed <em>without a shuffle</em>, because corresponding buckets are guaranteed to contain the same key ranges. This is a powerful optimization for repeatedly-joined tables in data warehouse scenarios.</p>
+</div>
+
+<!-- ═══════════════════ CHAPTER VII ═══════════════════ -->
+<div class="chapter" id="ch7">
+  <div class="chapter-header">
+    <div class="ch-num">Chapter VII</div>
+    <h2>MLlib: Distributed Machine Learning</h2>
+    <div class="abstract">Spark MLlib provides scalable implementations of common machine learning algorithms, a standardized pipeline API for composing ML workflows, and utilities for feature engineering, model selection, and evaluation &mdash; all designed to operate transparently on distributed data.</div>
+  </div>
+
+  <h3>7.1 &ensp; The Fundamental Challenge</h3>
+  <p>Most machine learning algorithms are fundamentally <em class="h1">iterative</em>: they repeatedly scan the training data, compute gradients or other statistics, update model parameters, and check for convergence. On a single machine, the speed is limited by how fast you can pass through the data. For datasets that exceed a single machine's memory or where training time becomes prohibitive, distributing the computation across a cluster is essential.</p>
+
+  <p>The challenge of distributed ML is not simply splitting data across machines &mdash; it's doing so in a way that (1) produces mathematically correct results, (2) minimizes communication overhead, and (3) scales efficiently with cluster size. Different algorithms distribute differently.</p>
+
+  <h3>7.2 &ensp; How Distributed Training Works</h3>
+
+  <h4>Linear Models (Logistic Regression, Linear Regression, SVM)</h4>
+  <p>These algorithms optimize a loss function using gradient-based methods. In distributed mode, the training data is partitioned across executors. Each iteration proceeds as follows: (1) The driver broadcasts the current model parameters to all executors. (2) Each executor computes <em>local gradients</em> on its partition of data. (3) Local gradients are sent back to the driver, which averages them (weighted by partition size) to get the global gradient. (4) The driver updates the model parameters using the global gradient. This is mathematically equivalent to computing the gradient on the full dataset because gradients are additive.</p>
+
+  <h4>Tree-Based Models (Decision Trees, Random Forest, GBT)</h4>
+  <p>Distributed tree training uses a different strategy. Building a decision tree requires finding the best feature and split point at each node. Rather than shuffling raw data, each executor computes <em>local histograms</em> of feature value distributions for each candidate split. These histograms are small fixed-size arrays and are cheap to aggregate. The driver merges histograms from all executors and selects the globally optimal split. This approach scales well because the communication cost depends on the number of features and histogram bins, not the data volume.</p>
+
+  <h4>Clustering (K-Means)</h4>
+  <p>K-Means is naturally parallelizable. Each iteration: (1) Broadcast current cluster centers to all executors. (2) Each executor assigns each point in its partition to the nearest center and computes partial cluster sums and counts. (3) Partial sums are aggregated at the driver to compute new centers. This is a "map-reduce" pattern that converges to the same result as single-machine K-Means.</p>
+
+  <div class="analogy">
+    <div class="tag">Intuitive Analogy &mdash; Grading Exams</div>
+    <p>A professor needs to compute class statistics from 10,000 exams. Working alone would take weeks. Instead, she divides the exams among 5 teaching assistants. Each TA independently calculates summary statistics (average, standard deviation, pass rate) for their 2,000 exams, then reports these summaries to the professor, who combines them into the overall class statistics. This is precisely how Spark distributes ML computation &mdash; distribute the data-intensive work, aggregate compact summaries.</p>
+  </div>
+
+  <h3>7.3 &ensp; The Pipeline API</h3>
+  <p>MLlib's Pipeline API, inspired by scikit-learn, provides a standard abstraction for composing machine learning workflows. It is built on two fundamental concepts:</p>
+
+  <div class="grid2">
+    <div class="card b">
+      <div class="label">Transformer</div>
+      <p>A Transformer takes a DataFrame as input and produces a new DataFrame as output, typically by appending one or more columns. Examples include <code>StringIndexer</code> (converts categorical strings to numeric indices), <code>VectorAssembler</code> (combines multiple columns into a single feature vector column), <code>StandardScaler</code> (after fitting), and any trained model (which transforms features into predictions).</p>
+      <p>Method: <code>.transform(df) &rarr; DataFrame</code></p>
+    </div>
+    <div class="card a">
+      <div class="label">Estimator</div>
+      <p>An Estimator is an algorithm that <em>learns from data</em>. It takes a DataFrame, analyzes it, and produces a Transformer (a fitted model). Before fitting, it has <em>hyperparameters</em> (configurable settings). After fitting, it becomes a Transformer with learned <em>parameters</em>. Examples: <code>LogisticRegression</code>, <code>RandomForestClassifier</code>, <code>StandardScaler</code> (before fitting).</p>
+      <p>Method: <code>.fit(df) &rarr; Model (a Transformer)</code></p>
+    </div>
+  </div>
+
+  <h3>7.4 &ensp; Pipeline Composition</h3>
+  <p>A <code>Pipeline</code> chains multiple stages (Transformers and Estimators) into a single workflow. When you call <code>pipeline.fit(trainDF)</code>, Spark processes each stage in order: Transformers pass data through via <code>.transform()</code>; Estimators are fitted via <code>.fit()</code> and their resulting models are inserted into the pipeline. The output is a <code>PipelineModel</code> that can be applied to new data in a single <code>.transform()</code> call.</p>
+
+  <figure>
+    <svg viewBox="0 0 780 170" xmlns="http://www.w3.org/2000/svg" style="max-width:740px">
+      <rect x="5" y="60" width="85" height="50" rx="4" fill="#fff" stroke="#888" stroke-width="1.5"/>
+      <text x="47" y="90" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10" font-weight="600">Raw Data</text>
+      <line x1="90" y1="85" x2="115" y2="85" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+
+      <rect x="115" y="55" width="115" height="60" rx="4" fill="#fff" stroke="#1a4f8b" stroke-width="2"/>
+      <text x="172" y="77" text-anchor="middle" fill="#1a4f8b" font-family="Source Sans 3, sans-serif" font-size="9" font-weight="700">TRANSFORMER</text>
+      <text x="172" y="95" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10">StringIndexer</text>
+      <line x1="230" y1="85" x2="255" y2="85" stroke="#888" stroke-width="1.5" marker-end="url(#a2)"/>
+
+      <rect x="255" y="55" width="115" height="60" rx="4" fill="#fff" stroke="#1a4f8b" stroke-width="2"/>
+      <text x="312" y="77" text-anchor="middle" fill="#1a4f8b" font-family="Source Sans 3, sans-serif" font-size="9" font-weight="700">TRANSFORMER</text>
+      <text x="312" y="95" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10">VectorAssembler</text>
+      <line x1="370" y1="85" x2="395" y2="85" stroke="#888" stroke-width="1.5" marker-end="url(#a3)"/>
+
+      <rect x="395" y="55" width="115" height="60" rx="4" fill="#fff" stroke="#5b3a8b" stroke-width="2"/>
+      <text x="452" y="77" text-anchor="middle" fill="#5b3a8b" font-family="Source Sans 3, sans-serif" font-size="9" font-weight="700">ESTIMATOR</text>
+      <text x="452" y="95" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10">StandardScaler</text>
+      <line x1="510" y1="85" x2="535" y2="85" stroke="#888" stroke-width="1.5" marker-end="url(#a1)"/>
+
+      <rect x="535" y="55" width="115" height="60" rx="4" fill="#fff" stroke="#8b1a1a" stroke-width="2"/>
+      <text x="592" y="77" text-anchor="middle" fill="#8b1a1a" font-family="Source Sans 3, sans-serif" font-size="9" font-weight="700">ESTIMATOR</text>
+      <text x="592" y="95" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10">GBTClassifier</text>
+      <line x1="650" y1="85" x2="675" y2="85" stroke="#888" stroke-width="1.5" marker-end="url(#a4)"/>
+
+      <rect x="675" y="65" width="85" height="40" rx="4" fill="#1a6b4a"/>
+      <text x="717" y="90" text-anchor="middle" fill="#fff" font-family="Source Sans 3, sans-serif" font-size="10" font-weight="700">Predictions</text>
+
+      <text x="390" y="35" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10" font-style="italic">pipeline.fit(trainDF) processes each stage sequentially, left to right</text>
+      <text x="172" y="145" text-anchor="middle" fill="#1a4f8b" font-family="Source Sans 3, sans-serif" font-size="9">.transform()</text>
+      <text x="312" y="145" text-anchor="middle" fill="#1a4f8b" font-family="Source Sans 3, sans-serif" font-size="9">.transform()</text>
+      <text x="452" y="145" text-anchor="middle" fill="#5b3a8b" font-family="Source Sans 3, sans-serif" font-size="9">.fit() &rarr; .transform()</text>
+      <text x="592" y="145" text-anchor="middle" fill="#8b1a1a" font-family="Source Sans 3, sans-serif" font-size="9">.fit() &rarr; .transform()</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 7.1.</span> An ML Pipeline with four stages. Transformers pass data through; Estimators learn from data and produce models. The fitted PipelineModel encapsulates the entire workflow.</figcaption>
+  </figure>
+
+  <h3>7.5 &ensp; Feature Engineering in MLlib</h3>
+  <p>MLlib provides a comprehensive set of feature transformers that handle the most common preprocessing tasks. <code>StringIndexer</code> maps categorical strings to numerical indices (sorted by frequency). <code>OneHotEncoder</code> converts indexed categories into sparse binary vectors. <code>VectorAssembler</code> combines multiple feature columns into a single vector column &mdash; the standard input format for all MLlib algorithms. <code>StandardScaler</code> normalizes features to zero mean and unit variance. <code>Imputer</code> fills missing values with mean or median. <code>Bucketizer</code> discretizes continuous features into bins. <code>PCA</code> performs dimensionality reduction.</p>
+
+  <p>Each of these operates on entire distributed DataFrames, processing partitions in parallel. The critical insight is that feature engineering often dominates the ML workflow in terms of both development time and execution time &mdash; the actual model training is frequently the fast part.</p>
+
+  <h3>7.6 &ensp; Hyperparameter Tuning: CrossValidator and TrainValidationSplit</h3>
+  <p><code>CrossValidator</code> performs k-fold cross-validation over a <code>ParamGrid</code> &mdash; a grid of hyperparameter combinations. For each combination and each fold, it trains a model and evaluates it. With k=5 folds and 20 parameter combinations, that's 100 model fits. Spark can distribute these fits across executors, achieving significant parallelism.</p>
+
+  <p><code>TrainValidationSplit</code> is a simpler alternative that uses a single train/validation split rather than k folds. It's faster (1/k the work) but produces less reliable estimates, especially on small datasets.</p>
+
+  <p>Both accept a <code>Pipeline</code> as the estimator, meaning the entire workflow (feature engineering + model training) is tuned end-to-end. This is essential because some hyperparameters (e.g., the number of PCA components) affect preprocessing, not just the final model.</p>
+
+  <h3>7.7 &ensp; Model Evaluation</h3>
+  <p>MLlib provides evaluators for different task types: <code>BinaryClassificationEvaluator</code> (AUC-ROC, AUC-PR), <code>MulticlassClassificationEvaluator</code> (accuracy, F1, precision, recall), <code>RegressionEvaluator</code> (RMSE, MAE, R&sup2;), and <code>ClusteringEvaluator</code> (silhouette score). These evaluators are used both standalone and within CrossValidator for automated model selection.</p>
+
+  <h3>7.8 &ensp; Model Persistence</h3>
+  <p>Fitted models and entire PipelineModels can be saved to disk via <code>model.save(path)</code> and loaded with <code>PipelineModel.load(path)</code>. This enables training on a cluster and deploying the model in a different environment &mdash; a Spark Structured Streaming application, a batch scoring job, or an exported format for serving.</p>
+</div>
+
+<!-- ═══════════════════ CHAPTER VIII ═══════════════════ -->
+<div class="chapter" id="ch8">
+  <div class="chapter-header">
+    <div class="ch-num">Chapter VIII</div>
+    <h2>The Spark Ecosystem &amp; Beyond</h2>
+    <div class="abstract">Spark is not a single tool but a unified engine supporting multiple workloads. This chapter surveys the broader ecosystem: Structured Streaming, GraphX, third-party integrations, and Spark's role in modern data architectures.</div>
+  </div>
+
+  <h3>8.1 &ensp; The Unified Engine</h3>
+  <p>Spark's architecture is distinguished by its <em class="h1">unified runtime</em>. All libraries &mdash; SQL, Streaming, MLlib, GraphX &mdash; share the same core engine: the same scheduler, the same optimizer (Catalyst), the same execution engine (Tungsten), and the same memory manager. This means you can freely combine SQL queries, machine learning pipelines, and streaming operations in a single application without data serialization boundaries or performance cliffs between components.</p>
+
+  <figure>
+    <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" style="max-width:660px">
+      <rect x="140" y="160" width="420" height="55" rx="6" fill="#fff" stroke="#8b1a1a" stroke-width="2.5"/>
+      <text x="350" y="192" text-anchor="middle" fill="#8b1a1a" font-weight="700" font-family="Source Sans 3, sans-serif" font-size="15">Spark Core (RDDs, DAG, Scheduler, Tungsten)</text>
+
+      <rect x="10" y="60" width="145" height="65" rx="6" fill="#fff" stroke="#1a4f8b" stroke-width="2"/>
+      <text x="82" y="87" text-anchor="middle" fill="#1a4f8b" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Spark SQL</text>
+      <text x="82" y="105" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10">DataFrames &bull; Catalyst</text>
+
+      <rect x="180" y="60" width="145" height="65" rx="6" fill="#fff" stroke="#5b3a8b" stroke-width="2"/>
+      <text x="252" y="87" text-anchor="middle" fill="#5b3a8b" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Structured</text>
+      <text x="252" y="105" text-anchor="middle" fill="#5b3a8b" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">Streaming</text>
+
+      <rect x="350" y="60" width="145" height="65" rx="6" fill="#fff" stroke="#1a6b4a" stroke-width="2"/>
+      <text x="422" y="87" text-anchor="middle" fill="#1a6b4a" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">MLlib</text>
+      <text x="422" y="105" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10">Machine Learning</text>
+
+      <rect x="520" y="60" width="145" height="65" rx="6" fill="#fff" stroke="#92700a" stroke-width="2"/>
+      <text x="592" y="87" text-anchor="middle" fill="#92700a" font-weight="600" font-family="Source Sans 3, sans-serif" font-size="13">GraphX</text>
+      <text x="592" y="105" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="10">Graph Processing</text>
+
+      <line x1="82" y1="125" x2="230" y2="160" stroke="#1a4f8b" stroke-width="1.5" marker-end="url(#a2)"/>
+      <line x1="252" y1="125" x2="300" y2="160" stroke="#5b3a8b" stroke-width="1.5" marker-end="url(#a3)"/>
+      <line x1="422" y1="125" x2="390" y2="160" stroke="#1a6b4a" stroke-width="1.5" marker-end="url(#a4)"/>
+      <line x1="592" y1="125" x2="470" y2="160" stroke="#92700a" stroke-width="1.5"/>
+
+      <text x="350" y="240" text-anchor="middle" fill="#888" font-family="Source Sans 3, sans-serif" font-size="11">Cluster Managers: YARN &bull; Mesos &bull; Kubernetes &bull; Standalone</text>
+      <text x="350" y="42" text-anchor="middle" fill="#5e5e5e" font-family="Source Sans 3, sans-serif" font-size="11" font-style="italic">Unified engine: all libraries share the same scheduler, optimizer, and memory management.</text>
+    </svg>
+    <figcaption><span class="fig-num">Figure 8.1.</span> Spark's unified architecture. Four domain-specific libraries built on a common core.</figcaption>
+  </figure>
+
+  <h3>8.2 &ensp; Structured Streaming</h3>
+  <p>Structured Streaming is Spark's stream processing engine, built on the Spark SQL engine. Its core abstraction is remarkably elegant: a streaming data source is treated as an <em class="h2">unbounded table</em> to which new rows are continuously appended. You write your query as if against a static table; Spark incrementally processes new data as it arrives.</p>
+
+  <p>Under the hood, Spark executes queries in one of two modes. <em>Micro-batch processing</em> (default) collects incoming data into small batches (configurable from 100ms to minutes) and processes each batch as a regular Spark SQL query. This provides exactly-once semantics and benefits from all of Catalyst's optimizations. <em>Continuous processing</em> (experimental) achieves lower latency (~1ms) by processing records individually, but sacrifices some fault tolerance guarantees.</p>
+
+  <p>Structured Streaming supports output modes that determine how results are written: <em>append</em> (only new rows are output), <em>complete</em> (the entire result table is rewritten each time &mdash; useful for aggregations), and <em>update</em> (only changed rows are output). It integrates with sources like Apache Kafka, file systems, and sockets, and sinks like Kafka, file systems, console, and custom foreach operations.</p>
+
+  <p>The critical insight is that <em>the same Catalyst optimizer, Tungsten engine, and DataFrame API</em> that power batch queries also power streaming queries. You can even join a streaming DataFrame with a static DataFrame, or run ML models on streaming data, using the same APIs.</p>
+
+  <h3>8.3 &ensp; GraphX and GraphFrames</h3>
+  <p>GraphX is Spark's library for graph-parallel computation. It represents graphs as pairs of RDDs: a <em>VertexRDD</em> (vertices with attributes) and an <em>EdgeRDD</em> (edges with attributes). It provides a set of fundamental graph operators (subgraph, joinVertices, aggregateMessages) and implements several standard graph algorithms: PageRank, connected components, triangle counting, shortest paths, and label propagation.</p>
+
+  <p>The core computational primitive is <code>aggregateMessages</code>, which implements the "think like a vertex" paradigm: each vertex sends messages along its edges, and receives aggregated messages from its neighbors. This maps naturally to Spark's distributed execution model, where vertices in the same partition are processed by the same task.</p>
+
+  <p>For newer projects, <em>GraphFrames</em> (a separate package) is generally preferred. GraphFrames represent graphs using DataFrames rather than RDDs, enabling Catalyst optimizations and providing a more user-friendly query interface including motif finding (pattern matching on graph structures).</p>
+
+  <h3>8.4 &ensp; The Modern Data Lakehouse</h3>
+  <p>Spark increasingly operates within the <em class="h3">lakehouse</em> architecture &mdash; a pattern that combines the flexibility of data lakes (storing raw data in open formats on cheap object storage) with the reliability features of data warehouses (ACID transactions, schema enforcement, time travel). Three prominent lakehouse formats have emerged:</p>
+
+  <div class="grid3">
+    <div class="card a">
+      <div class="label">Delta Lake</div>
+      <p>Developed by Databricks. Adds ACID transactions, schema enforcement, time travel (query historical versions), and efficient upserts (MERGE) to Parquet-based data lakes. Deeply integrated with Spark.</p>
+    </div>
+    <div class="card b">
+      <div class="label">Apache Iceberg</div>
+      <p>An open table format developed at Netflix. Engine-agnostic (works with Spark, Trino, Flink). Provides ACID transactions, hidden partitioning, schema evolution, and partition evolution without rewriting data.</p>
+    </div>
+    <div class="card c">
+      <div class="label">Apache Hudi</div>
+      <p>Developed at Uber. Optimized for upsert-heavy workloads and incremental processing. Provides record-level inserts, updates, and deletes with efficient change data capture.</p>
+    </div>
+  </div>
+
+  <h3>8.5 &ensp; Spark Connect</h3>
+  <p>Introduced in Spark 3.4, Spark Connect is a thin client-server protocol that decouples the Spark client from the server. Previously, the client (your driver program) had to run in the same JVM process as the Spark driver. Spark Connect allows thin clients written in any language (Python, Scala, Go, Rust) to submit queries over a gRPC interface to a remote Spark server. This enables new deployment patterns: centralized Spark servers, cloud-hosted Spark-as-a-service, and lighter-weight client applications.</p>
+
+  <h3>8.6 &ensp; Performance Tuning Summary</h3>
+  <div class="insight">
+    <div class="insight-title">Essential Performance Principles</div>
+    <p><strong>1. Minimize shuffles.</strong> They are the single most expensive operation. Use broadcast joins for small tables. Pre-partition data on frequently-joined keys. Use <code>coalesce</code> instead of <code>repartition</code> when reducing partition count.</p>
+    <p><strong>2. Use columnar formats.</strong> Parquet (or Delta/Iceberg) with appropriate compression provides the best I/O performance for analytical workloads.</p>
+    <p><strong>3. Leverage partition pruning.</strong> Partition your data on commonly-filtered, low-cardinality columns. This converts full table scans into targeted directory reads.</p>
+    <p><strong>4. Cache strategically.</strong> Persist DataFrames that are used in multiple actions. Use <code>MEMORY_AND_DISK</code> to avoid recomputation when memory is tight. Unpersist when no longer needed.</p>
+    <p><strong>5. Right-size partitions.</strong> Target 128&ndash;256 MB per partition. Too few = under-utilization; too many = scheduling overhead.</p>
+    <p><strong>6. Prefer built-in functions over UDFs.</strong> Built-in functions are optimized by Catalyst and execute in JVM-native code. UDFs (especially Python) bypass the optimizer and incur serialization costs.</p>
+    <p><strong>7. Enable AQE.</strong> <code>spark.sql.adaptive.enabled = true</code> (default since Spark 3.2) allows runtime re-optimization of join strategies, partition coalescing, and skew handling.</p>
+  </div>
+
+  <hr class="sep">
+
+  <h3>Concluding Remarks</h3>
+  <p>Apache Spark emerged from a specific historical need &mdash; the inability of MapReduce to handle iterative, interactive, and multi-step analytical workloads efficiently. Its core innovations (in-memory computation, lineage-based fault tolerance, lazy evaluation with DAG optimization, and a unified multi-workload engine) made it the dominant framework for large-scale data processing.</p>
+
+  <p>Understanding Spark at the theoretical level &mdash; why lazy evaluation enables optimization, why shuffles are expensive, why columnar formats outperform row formats for analytics, how distributed ML algorithms decompose computation &mdash; provides the foundation for writing efficient Spark applications and diagnosing performance issues when they arise. The details change across versions, but these principles remain stable.</p>
+</div>
+
+<footer>
+  <p>Apache Spark: A Comprehensive Theoretical Overview</p>
+  <p style="margin-top:.25rem">Companion reference for the <em>explore-spark</em> learning repository &bull; 2026</p>
+</footer>
+
+<!-- ── Active nav highlighting ── -->
+<script>
+const sections = document.querySelectorAll('.chapter[id]');
+const navLinks = document.querySelectorAll('nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 80) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+
+</body>
+</html>
